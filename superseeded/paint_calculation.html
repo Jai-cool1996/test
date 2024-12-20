@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background for black theme */
+            color: #fff; /* White text for contrast */
+            margin: 40px;
+            font-size: 16px;
+        }
+        h1, h2 {
+            color: #FFA500; /* Orange color for headings */
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #FFA500;
+        }
+        input, select, button {
+            padding: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #FFA500;
+            background-color: #333;
+            color: white;
+            border-radius: 5px;
+        }
+        input:focus, select:focus, button:focus {
+            outline: none;
+            border-color: #ff6600; /* Slightly different orange for focus */
+        }
+        button {
+            background-color: #FFA500;
+            color: black;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff6600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            color: #fff;
+        }
+        table, th, td {
+            border: 1px solid #FFA500;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #FFA500;
+        }
+        td {
+            background-color: #222;
+        }
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        /* Home button styling */
+        .home-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .home-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paint Calculator</h1>
+        <div class="section">
+            <h2></h2>
+            <label for="area">Total Surface Area (m²):</label>
+            <input type="number" id="area" step="0.001" required>
+            <label for="quantity">Quantity of Silencers:</label>
+            <input type="number" id="quantity" required>
+            <label for="coating">Single, Double or Triple Coat:</label>
+            <select id="coating">
+                <option value="single">Single</option>
+                <option value="double">Double</option>
+                <option value="triple">Triple</option>
+            </select>
+            <label for="paint1">First Coat Paint Type:</label>
+            <select id="paint1">
+                <option value="1">Zinc (75µ, 8.4 m²/l)</option>
+                <option value="2">Silicone (25µ, 18 m²/l)</option>
+            </select>
+            <label for="coats1">Number of Coats for First Paint:</label>
+            <input type="number" id="coats1" value="1" min="1" required>
+            <label for="dft1">First Coat DFT (µ):</label>
+            <input type="number" id="dft1" required>
+            <label for="cost1">Cost of First Coat Paint per litre (₹):</label>
+            <input type="number" id="cost1" step="0.01" required>
+            
+            <div id="secondCoat" style="display:none;">
+                <label for="paint2">Second Coat Paint Type:</label>
+                <select id="paint2">
+                    <option value="1">Zinc (75µ, 8.4 m²/l)</option>
+                    <option value="2">Silicone (25µ, 18 m²/l)</option>
+                </select>
+                <label for="coats2">Number of Coats for Second Paint:</label>
+                <input type="number" id="coats2" value="1" min="1">
+                <label for="dft2">Second Coat DFT (µ):</label>
+                <input type="number" id="dft2">
+                <label for="cost2">Cost of Second Coat Paint per litre (₹):</label>
+                <input type="number" id="cost2" step="0.01">
+            </div>
+            
+            <div id="thirdCoat" style="display:none;">
+                <label for="paint3">Third Coat Paint Type:</label>
+                <select id="paint3">
+                    <option value="1">Zinc (75µ, 8.4 m²/l)</option>
+                    <option value="2">Silicone (25µ, 18 m²/l)</option>
+                </select>
+                <label for="coats3">Number of Coats for Third Paint:</label>
+                <input type="number" id="coats3" value="1" min="1">
+                <label for="dft3">Third Coat DFT (µ):</label>
+                <input type="number" id="dft3">
+                <label for="cost3">Cost of Third Coat Paint per litre (₹):</label>
+                <input type="number" id="cost3" step="0.01">
+            </div>
+            
+            <h3>Additional Costs</h3>
+            <label for="paintApplicationCost">Paint Application Cost (₹ per m²):</label>
+            <input type="number" id="paintApplicationCost" step="0.01" required>
+            <label for="blastingCost">Blasting Application Cost (₹ per m²):</label>
+            <input type="number" id="blastingCost" step="0.01" required>
+            
+            <button onclick="calculatePaint()">Calculate Paint</button>
+            
+            <div id="paintResult">
+                <table id="outputTable">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Results will be displayed here -->
+                    </tbody>
+                </table>
+                <button onclick="exportToExcel()">Export to Excel</button>
+            </div>
+        </div>
+
+        <!-- Home Button -->
+        <button class="home-btn" onclick="window.location.href='Home.html'">Home</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+    <script>
+        // Show/hide coat inputs based on coating type
+        document.getElementById('coating').addEventListener('change', function () {
+            const secondCoatSection = document.getElementById('secondCoat');
+            const thirdCoatSection = document.getElementById('thirdCoat');
+            const coatType = this.value;
+            secondCoatSection.style.display = (coatType === 'double' || coatType === 'triple') ? 'block' : 'none';
+            thirdCoatSection.style.display = (coatType === 'triple') ? 'block' : 'none';
+        });
+
+        function calculatePaint() {
+            const area = parseFloat(document.getElementById('area').value);
+            const qty = parseInt(document.getElementById('quantity').value);
+            const coating = document.getElementById('coating').value;
+            const paint1 = parseInt(document.getElementById('paint1').value);
+            const dft1 = parseFloat(document.getElementById('dft1').value);
+            const cost1 = parseFloat(document.getElementById('cost1').value);
+            const coats1 = parseInt(document.getElementById('coats1').value);
+            const paintApplicationCost = parseFloat(document.getElementById('paintApplicationCost').value);
+            const blastingCost = parseFloat(document.getElementById('blastingCost').value);
+            const coverage = { 1: 8.4, 2: 18 }; // example coverage values per litre
+            const standardDft = { 1: 75, 2: 25 };
+            const wastageFactor = 1.4; // 40% wastage
+            const adjustedCoverage1 = coverage[paint1] * (standardDft[paint1] / dft1);
+            let paintRequired1 = (area * qty) / adjustedCoverage1 * wastageFactor * coats1;
+            let paintRequired2 = 0, paintRequired3 = 0;
+            let cost2Total = 0, cost3Total = 0;
+            
+            if (coating === 'double' || coating === 'triple') {
+                const paint2 = parseInt(document.getElementById('paint2').value);
+                const dft2 = parseFloat(document.getElementById('dft2').value);
+                const cost2 = parseFloat(document.getElementById('cost2').value);
+                const coats2 = parseInt(document.getElementById('coats2').value);
+                const adjustedCoverage2 = coverage[paint2] * (standardDft[paint2] / dft2);
+                paintRequired2 = (area * qty) / adjustedCoverage2 * wastageFactor * coats2;
+                cost2Total = paintRequired2 * cost2;
+            }
+            
+            if (coating === 'triple') {
+                const paint3 = parseInt(document.getElementById('paint3').value);
+                const dft3 = parseFloat(document.getElementById('dft3').value);
+                const cost3 = parseFloat(document.getElementById('cost3').value);
+                const coats3 = parseInt(document.getElementById('coats3').value);
+                const adjustedCoverage3 = coverage[paint3] * (standardDft[paint3] / dft3);
+                paintRequired3 = (area * qty) / adjustedCoverage3 * wastageFactor * coats3;
+                cost3Total = paintRequired3 * cost3;
+            }
+            
+            // Paint 1 cost calculation
+            const cost1Total = paintRequired1 * cost1;
+            // Total cost for all coats and application costs
+            const totalCost = cost1Total + cost2Total + cost3Total;
+            const totalPaintRequired = paintRequired1 + paintRequired2 + paintRequired3;
+            const totalApplicationCost = area * qty * paintApplicationCost; // cost per m² * area * quantity
+            const totalBlastingCost = area * qty * blastingCost; // cost per m² * area * quantity
+            const grandTotalCost = totalCost + totalApplicationCost + totalBlastingCost;
+            
+            // Display results in a table format
+            const tableBody = document.getElementById('outputTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = `
+                <tr><td>Paint required for First Paint Scheme (litres)</td><td>${paintRequired1.toFixed(2)} L</td></tr>
+                <tr><td>Cost for First Paint Scheme (₹)</td><td>${cost1Total.toFixed(2)}</td></tr>
+                ${paintRequired2 ? `<tr><td>Paint required for Second Paint Scheme (litres)</td><td>${paintRequired2.toFixed(2)} L</td></tr>` : ""} 
+                ${cost2Total ? `<tr><td>Cost for Second Paint Scheme (₹)</td><td>${cost2Total.toFixed(2)}</td></tr>` : ""}
+                ${paintRequired3 ? `<tr><td>Paint required for Third Paint Scheme (litres)</td><td>${paintRequired3.toFixed(2)} L</td></tr>` : ""}
+                ${cost3Total ? `<tr><td>Cost for Third Paint Scheme (₹)</td><td>${cost3Total.toFixed(2)}</td></tr>` : ""}
+                <tr><td>Total Paint Required (litres)</td><td>${totalPaintRequired.toFixed(2)} L</td></tr>
+                <tr><td>Total Paint Cost (₹)</td><td>${totalCost.toFixed(2)}</td></tr>
+                <tr><td>Blasting Cost per Sq.m (₹)</td><td>${blastingCost.toFixed(2)}</td></tr>
+                <tr><td>Total Blasting Cost for All Silencers (₹)</td><td>${totalBlastingCost.toFixed(2)}</td></tr>
+                <tr><td>Painting Application Cost per Sq.m (₹)</td><td>${paintApplicationCost.toFixed(2)}</td></tr>
+                <tr><td>Total Painting Application Cost for All Silencers (₹)</td><td>${totalApplicationCost.toFixed(2)}</td></tr>
+                <tr><td><strong>Grand Total Cost (₹)</strong></td><td><strong>${grandTotalCost.toFixed(2)}</strong></td></tr>
+            `;
+        }
+
+        function exportToExcel() {
+            const table = document.getElementById('outputTable'); // Get the table element
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Paint Calculation" });
+            XLSX.writeFile(wb, 'Paint_Calculation_Report.xlsx'); // Export as Excel file
+        }
+    </script>
+</body>
+</html>

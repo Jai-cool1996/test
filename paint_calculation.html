@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 40px;
+            font-size: 16px;
+        }
+        h1, h2 {
+            color: #FFA500;
+        }
+        label {
+            color: #FFA500;
+        }
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #FFA500;
+            background-color: #333;
+            color: white;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #FFA500;
+            color: black;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff6600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #FFA500;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #FFA500;
+        }
+        td {
+            background-color: #222;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+        .home-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .home-btn:hover {
+            background-color: #0056b3;
+        }
+        .expanded-table {
+            width: 100%; /* Expanding the table width */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paint Calculator</h1>
+        <div class="section">
+            <h2>Input Details</h2>
+            <label for="area">Total Surface Area (m²):</label>
+            <input type="number" id="area" step="0.001" required>
+            <label for="quantity">Quantity of Silencers:</label>
+            <input type="number" id="quantity" required>
+
+            <table id="inputTable">
+                <thead>
+                    <tr>
+                        <th>Paint System</th>
+                        <th>No. of Coats</th>
+                        <th>DFT (µ)</th>
+                        <th>Cost of Paint (₹/litre)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <select class="paint-system">
+                                <option value="1">Zinc (75µ, 8.4 m²/l)</option>
+                                <option value="2">Silicone (25µ, 18 m²/l)</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="coats" value="1" min="1" required></td>
+                        <td><input type="number" class="dft" required></td>
+                        <td><input type="number" class="cost" step="0.01" required></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button onclick="addRow()">Add Row</button>
+            <button onclick="removeRow()">Remove Row</button>
+
+            <h3>Additional Costs</h3>
+            <label for="paintApplicationCost">Paint Application Cost (₹ per m²):</label>
+            <input type="number" id="paintApplicationCost" step="0.01" required>
+            <label for="blastingCost">Blasting Application Cost (₹ per m²):</label>
+            <input type="number" id="blastingCost" step="0.01" required>
+            
+            <button onclick="calculatePaint()">Calculate Paint</button>
+
+            <div id="paintResult">
+                <table id="outputTable" class="expanded-table">
+                    <thead>
+                        <tr>
+                            <th>S. No</th>
+                            <th>Description</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Results will be displayed here -->
+                    </tbody>
+                </table>
+                <button onclick="exportToExcel()">Export to Excel</button>
+            </div>
+        </div>
+        <button class="home-btn" onclick="window.location.href='index1.html'">Home</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+    <script>
+        function addRow() {
+            const table = document.getElementById('inputTable').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td>
+                    <select class="paint-system">
+                        <option value="1">Zinc (75µ, 8.4 m²/l)</option>
+                        <option value="2">Silicone (25µ, 18 m²/l)</option>
+                    </select>
+                </td>
+                <td><input type="number" class="coats" value="1" min="1" required></td>
+                <td><input type="number" class="dft" required></td>
+                <td><input type="number" class="cost" step="0.01" required></td>
+            `;
+        }
+
+        function removeRow() {
+            const table = document.getElementById('inputTable').getElementsByTagName('tbody')[0];
+            if (table.rows.length > 1) {
+                table.deleteRow(-1);
+            }
+        }
+
+        function calculatePaint() {
+            const area = parseFloat(document.getElementById('area').value);
+            const qty = parseInt(document.getElementById('quantity').value);
+            const paintApplicationCost = parseFloat(document.getElementById('paintApplicationCost').value);
+            const blastingCost = parseFloat(document.getElementById('blastingCost').value);
+            const coverage = { 1: 8.4, 2: 18 };
+            const standardDft = { 1: 75, 2: 25 };
+            const wastageFactor = 1.4;
+
+            let totalPaintRequired = 0, totalPaintCost = 0;
+            const paintDetails = [];
+
+            document.querySelectorAll('#inputTable tbody tr').forEach((row, index) => {
+                const paintSystem = parseInt(row.querySelector('.paint-system').value);
+                const coats = parseInt(row.querySelector('.coats').value);
+                const dft = parseFloat(row.querySelector('.dft').value);
+                const cost = parseFloat(row.querySelector('.cost').value);
+
+                const adjustedCoverage = coverage[paintSystem] * (standardDft[paintSystem] / dft);
+                const paintRequired = (area * qty) / adjustedCoverage * wastageFactor * coats;
+                const paintCost = paintRequired * cost;
+
+                totalPaintRequired += paintRequired;
+                totalPaintCost += paintCost;
+
+                paintDetails.push({
+                    serialNo: index + 1,
+                    system: paintSystem === 1 ? "Zinc (75µ)" : "Silicone (25µ)",
+                    coats: coats,
+                    paintRequired: paintRequired.toFixed(2),
+                    cost: paintCost.toFixed(2)
+                });
+            });
+
+            const totalApplicationCost = area * qty * paintApplicationCost;
+            const totalBlastingCost = area * qty * blastingCost;
+            const grandTotalCost = totalPaintCost + totalApplicationCost + totalBlastingCost;
+
+            const tableBody = document.getElementById('outputTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+
+            // Add details for each paint system
+            paintDetails.forEach(detail => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${detail.serialNo}</td>
+                        <td>Paint System: ${detail.system}, Coats: ${detail.coats}</td>
+                        <td>Paint Required: ${detail.paintRequired} L, Cost: ₹${detail.cost}</td>
+                    </tr>
+                `;
+            });
+
+            // Add totals
+            tableBody.innerHTML += `
+                <tr><td></td><td>Total Paint Required (litres)</td><td>${totalPaintRequired.toFixed(2)} L</td></tr>
+                <tr><td></td><td>Total Paint Cost (₹)</td><td>${totalPaintCost.toFixed(2)}</td></tr>
+                <tr><td></td><td>Total Application Cost (₹)</td><td>${totalApplicationCost.toFixed(2)}</td></tr>
+                <tr><td></td><td>Total Blasting Cost (₹)</td><td>${totalBlastingCost.toFixed(2)}</td></tr>
+                <tr><td></td><td><strong>Grand Total Cost (₹)</strong></td><td><strong>${grandTotalCost.toFixed(2)}</strong></td></tr>
+            `;
+        }
+
+        function exportToExcel() {
+            const table = document.getElementById('outputTable');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Paint Calculation" });
+            XLSX.writeFile(wb, 'Paint_Calculation_Report.xlsx');
+        }
+    </script>
+</body>
+</html>
