@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Schemes Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 40px;
+            font-size: 16px;
+        }
+        h1 {
+            color: #FFA500;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #FFA500;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #FFA500;
+        }
+        td {
+            background-color: #222;
+        }
+        .home-btn, .add-btn, .download-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .home-btn:hover, .add-btn:hover, .download-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paint Schemes Data</h1>
+        
+        <table id="paintSchemesTable">
+            <thead>
+                <tr>
+                    <th>Paint System Name</th>
+                    <th>DFT (µ)</th>
+                    <th>Coverage (m²/l)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Existing paint schemes will be populated here -->
+                <tr>
+                    <td contenteditable="true">Zinc</td>
+                    <td contenteditable="true">75</td>
+                    <td contenteditable="true">8.4</td>
+                    <td><button onclick="deleteRow(this)">Delete</button></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">Silicone</td>
+                    <td contenteditable="true">25</td>
+                    <td contenteditable="true">18</td>
+                    <td><button onclick="deleteRow(this)">Delete</button></td>
+                </tr>
+                <!-- Additional paint schemes can be added here -->
+            </tbody>
+        </table>
+
+        <button class="add-btn" onclick="addRow()">Add Paint System</button>
+        <button class="home-btn" onclick="window.location.href='index.html'">Home</button>
+        <button class="download-btn" onclick="downloadJSON()">Download JSON</button>
+    </div>
+
+    <script>
+        // Function to add a new row
+        function addRow() {
+            const tableBody = document.querySelector('#paintSchemesTable tbody');
+            const newRow = document.createElement('tr');
+            
+            newRow.innerHTML = `
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td><button onclick="deleteRow(this)">Delete</button></td>
+            `;
+            
+            tableBody.appendChild(newRow);
+        }
+
+        // Function to delete a row
+        function deleteRow(button) {
+            const row = button.parentNode.parentNode; // Get the row of the button
+            row.parentNode.removeChild(row); // Remove the row from the table
+        }
+
+        // Function to convert the table data to a JSON object
+        function getTableData() {
+            const table = document.querySelector('#paintSchemesTable');
+            const rows = table.querySelectorAll('tbody tr');
+            const data = [];
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const paintSystem = {
+                    "Paint System Name": cells[0].textContent.trim(),
+                    "DFT (µ)": parseFloat(cells[1].textContent.trim()),
+                    "Coverage (m²/l)": parseFloat(cells[2].textContent.trim())
+                };
+                data.push(paintSystem);
+            });
+
+            return data;
+        }
+
+        // Function to download the JSON data
+        function downloadJSON() {
+            const data = getTableData(); // Get the table data as a JSON object
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); // Create a Blob
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob); // Create an object URL for the Blob
+            link.download = 'paint_schemes.json'; // Set the file name
+            link.click(); // Programmatically click the link to trigger the download
+        }
+
+        // Optional: Load paint schemes data from a JSON file when the page loads
+        function loadPaintSchemes() {
+            fetch('data/paint_schemes.json') // Path to your JSON file
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#paintSchemesTable tbody');
+                    tableBody.innerHTML = ''; // Clear existing rows
+
+                    data.forEach(paint => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td contenteditable="true">${paint["Paint System Name"]}</td>
+                            <td contenteditable="true">${paint["DFT (µ)"]}</td>
+                            <td contenteditable="true">${paint["Coverage (m²/l)"]}</td>
+                            <td><button onclick="deleteRow(this)">Delete</button></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading paint schemes:', error);
+                });
+        }
+
+        // Call the function to load paint schemes data when the page loads
+        window.onload = loadPaintSchemes;
+    </script>
+
+</body>
+</html>

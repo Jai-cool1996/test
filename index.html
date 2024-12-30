@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 40px;
+            font-size: 16px;
+        }
+        h1, h2 {
+            color: #FFA500;
+        }
+        label {
+            color: #FFA500;
+        }
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #FFA500;
+            background-color: #333;
+            color: white;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #FFA500;
+            color: black;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff6600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #FFA500;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #FFA500;
+        }
+        td {
+            background-color: #222;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+        .home-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .home-btn:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #333;
+            color: #FFA500;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paint Calculator</h1>
+        
+        <div class="section">
+            <h2>Input Details</h2>
+            
+            <label for="area">Total Surface Area (m²):</label>
+            <input type="number" id="area" step="0.001" required>
+            
+            <label for="quantity">Quantity of Silencers:</label>
+            <input type="number" id="quantity" required>
+
+            <table id="inputTable">
+                <thead>
+                    <tr>
+                        <th>Paint System</th>
+                        <th>No. of Coats</th>
+                        <th>DFT (µ)</th>
+                        <th>Cost of Paint (₹/litre)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <select class="paint-system"></select>
+                        </td>
+                        <td><input type="number" class="coats" value="1" min="1" required></td>
+                        <td><input type="number" class="dft" required></td>
+                        <td><input type="number" class="cost" step="0.01" required></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button onclick="addRow()">Add Row</button>
+            <button onclick="removeRow()">Remove Row</button>
+
+            <h3>Additional Costs</h3>
+            
+            <label for="paintApplicationCost">Paint Application Cost (₹ per m²):</label>
+            <input type="number" id="paintApplicationCost" step="0.01" required>
+
+            <label for="blastingCost">Blasting Application Cost (₹ per m²):</label>
+            <input type="number" id="blastingCost" step="0.01" required>
+
+            <button onclick="calculatePaint()">Calculate Paint</button>
+
+            <div id="paintResult">
+                <table id="outputTable" class="expanded-table">
+                    <thead>
+                        <tr>
+                            <th>S. No</th>
+                            <th>Description</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody><!-- Results will be displayed here --></tbody>
+                </table>
+
+                <!-- Link to Paint Schemes Data Page -->
+                <button onclick="window.location.href='paint_schemes.html'">Manage Paint Schemes</button> 
+                
+                <!-- Optional JSON display area -->
+                <h2>Paint System Data</h2>
+                <pre id="jsonDisplay">Loading JSON...</pre> 
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let paintData = []; // Store the fetched data globally to prevent multiple fetches
+
+        function addRow() {
+            const tableBody = document.querySelector('#inputTable tbody');
+            const newRow = document.createElement('tr');
+            
+            newRow.innerHTML = `
+                <td><select class='paint-system'></select></td>
+                <td><input type='number' class='coats' value='1' min='1' required></td>
+                <td><input type='number' class='dft' required></td>
+                <td><input type='number' class='cost' step='0.01' required></td>`;
+            
+            tableBody.appendChild(newRow);
+            loadPaintSystems(); // Reload paint systems for new row
+        }
+
+        function removeRow() {
+            const tableBody = document.querySelector('#inputTable tbody');
+            
+            if (tableBody.rows.length > 1) { // Ensure at least one row remains
+                tableBody.deleteRow(tableBody.rows.length - 1);
+            } else {
+                alert("At least one row must remain.");
+            }
+        }
+
+        function calculatePaint() {
+            alert("Calculation logic needs to be implemented.");
+        }
+
+        function loadPaintSystems() {
+            if (paintData.length === 0) {
+                fetch('paint_schemes.json')  // Ensure this path is correct
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!Array.isArray(data) || data.length === 0) {
+                            throw new Error('Invalid paint systems data.');
+                        }
+
+                        paintData = data; // Store data in global variable to avoid re-fetching
+
+                        const paintSystemSelects = document.querySelectorAll('.paint-system');
+                        
+                        paintSystemSelects.forEach(select => {
+                            select.innerHTML = ''; // Clear any existing options
+                            
+                            // Create a default option
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            defaultOption.textContent = 'Select Paint System';
+                            select.appendChild(defaultOption);
+
+                            // Populate the options with data from JSON
+                            data.forEach(paint => {
+                                const option = document.createElement('option');
+                                option.value = paint["Paint System Name"];
+                                option.textContent = paint["Paint System Name"];
+                                option.dataset.dft = paint["DFT (µ)"];
+                                option.dataset.coverage = paint["Coverage (m²/l)"];
+                                select.appendChild(option);
+                            });
+                        });
+
+                        // Display JSON data in the "jsonDisplay" element for debugging
+                        document.getElementById('jsonDisplay').textContent = JSON.stringify(data, null, 2);
+                    })
+                    .catch(error => {
+                        console.error('Error loading paint systems:', error);
+                        document.getElementById('jsonDisplay').textContent = 'Error loading JSON data';
+                    });
+            } else {
+                // If the data is already loaded, populate the selects from the global variable
+                const paintSystemSelects = document.querySelectorAll('.paint-system');
+                paintSystemSelects.forEach(select => {
+                    select.innerHTML = ''; // Clear any existing options
+                    
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select Paint System';
+                    select.appendChild(defaultOption);
+
+                    paintData.forEach(paint => {
+                        const option = document.createElement('option');
+                        option.value = paint["Paint System Name"];
+                        option.textContent = paint["Paint System Name"];
+                        option.dataset.dft = paint["DFT (µ)"];
+                        option.dataset.coverage = paint["Coverage (m²/l)"];
+                        select.appendChild(option);
+                    });
+                });
+            }
+        }
+
+        window.onload = loadPaintSystems;
+    </script>
+
+</body>
+</html>
